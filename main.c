@@ -2,12 +2,14 @@
 #include <SDL2/SDL.h>
 #include <math.h>
 
-#define WIDTH 900
-#define HEIGHT 600
+#define WIDTH 1200
+#define HEIGHT 700
 #define COLOR_WHITE 0xffffffff
 #define COLOR_BLACK 0x00000000
-#define COLOR_GRAY 0xefefefef
-#define RAYS_NUMBER 100
+#define COLOR_RAY 0xffd43b
+#define RAYS_NUMBER 500
+#define RAY_THICKNESS 1
+#define COLOR_RAY_BLUR 0xbd6800
 
 struct Circle
 {
@@ -52,7 +54,7 @@ void generate_rays(struct Circle circle ,struct Ray rays[RAYS_NUMBER])
 	}	
 }
 
-void FillRays(SDL_Surface* surface, struct Ray rays[RAYS_NUMBER], Uint32 color, struct Circle object)
+void FillRays(SDL_Surface* surface, struct Ray rays[RAYS_NUMBER], Uint32 color, Uint32 blur_color, struct Circle object)
 {
 	double radius_squared = pow(object.radius,2);
 	for(int i=0;i<RAYS_NUMBER;i++)
@@ -70,8 +72,12 @@ void FillRays(SDL_Surface* surface, struct Ray rays[RAYS_NUMBER], Uint32 color, 
 			x_draw += step*cos(ray.angle);
 			y_draw += step*sin(ray.angle);
 
-			SDL_Rect pixel = (SDL_Rect){x_draw,y_draw,1,1};
-			SDL_FillRect(surface,&pixel,color);
+			SDL_Rect ray_point = (SDL_Rect){x_draw,y_draw,RAY_THICKNESS,RAY_THICKNESS};
+			double blur_size = 3 * RAY_THICKNESS;
+			SDL_Rect ray_blur = (SDL_Rect){x_draw,y_draw,blur_size,blur_size};
+
+			//SDL_FillRect(surface,&ray_blur,blur_color);
+			SDL_FillRect(surface,&ray_point,color);
 			
 			if(x_draw < 0 || x_draw > WIDTH)
 				end_of_screen = 1;
@@ -94,14 +100,14 @@ int main()
 
 	SDL_Surface* surface = SDL_GetWindowSurface(window);
 
-	struct Circle circle = {200,200,80};
-	struct Circle shadow_circle = {650,300,140};
+	struct Circle circle = {200,200,42};
+	struct Circle shadow_circle = {550,300,140};
 	SDL_Rect erase_rect = {0,0,WIDTH,HEIGHT};	
 	
 	struct Ray rays[RAYS_NUMBER];
 	generate_rays(circle,rays);
 
-	double obstacle_speed_y = 1;
+	double obstacle_speed_y = 4;
 	int simulation_running = 1;
 	SDL_Event event;
 	// Con este while hacemos que el circulo siga al mouse
@@ -122,10 +128,11 @@ int main()
 		}
 		// Borramos la pantalla entera(rect) y ponemos el circulo donde el mouse
 		SDL_FillRect(surface, &erase_rect, COLOR_BLACK);
+		FillRays(surface,rays,COLOR_RAY,COLOR_RAY_BLUR,shadow_circle);
 		FillCircle(surface,circle,COLOR_WHITE);
 		
 		FillCircle(surface,shadow_circle,COLOR_WHITE);
-		FillRays(surface,rays,COLOR_GRAY, shadow_circle);
+		//FillRays(surface,rays,COLOR_RAY, shadow_circle);
 
 		//move_shadow_circle(&shadow_circle);
 		shadow_circle.y += obstacle_speed_y;

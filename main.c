@@ -101,6 +101,7 @@ int main()
 	struct Ray rays[RAYS_NUMBER];
 	generate_rays(circle,rays);
 
+	double obstacle_speed_y = 1;
 	int simulation_running = 1;
 	SDL_Event event;
 	// Con este while hacemos que el circulo siga al mouse
@@ -125,6 +126,13 @@ int main()
 		
 		FillCircle(surface,shadow_circle,COLOR_WHITE);
 		FillRays(surface,rays,COLOR_GRAY, shadow_circle);
+
+		//move_shadow_circle(&shadow_circle);
+		shadow_circle.y += obstacle_speed_y;
+		if(shadow_circle.y-shadow_circle.radius < 0)
+			obstacle_speed_y = -obstacle_speed_y;
+		if(shadow_circle.y+shadow_circle.radius > HEIGHT)
+			obstacle_speed_y = -obstacle_speed_y;
 
 		SDL_UpdateWindowSurface(window);
 		SDL_Delay(10);
